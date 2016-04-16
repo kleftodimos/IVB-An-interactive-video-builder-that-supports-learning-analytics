@@ -1,1 +1,0 @@
-insert into session_events (sessionid,vid,sectionid,eventtype,videotime,percent,content_table_bool,date,time) values ('2','31','2','4','65','15','0', curdate(),curtime())
