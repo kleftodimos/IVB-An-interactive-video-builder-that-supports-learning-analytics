@@ -1,0 +1,1 @@
+insert into session_video_quiz (sessionid,vid,userid,questionid,answerInt,answerText,date,time) values ('1','15','1','2','0','hello', curdate(),curtime())
