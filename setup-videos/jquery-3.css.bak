@@ -1,0 +1,22 @@
+html {
+    <!--background: #CCC;-->
+}
+
+
+
+ table {
+     width: 100%;
+	
+ }
+
+
+.container {
+    width: 350px;
+	height: 100px;
+    overflow: auto;
+    padding: 1em;
+    background:  #CCC;
+    border-style: solid;
+    border-width: 2px;
+ 
+}

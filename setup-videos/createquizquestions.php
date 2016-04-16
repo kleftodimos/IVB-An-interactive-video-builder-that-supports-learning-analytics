@@ -1,0 +1,493 @@
+<?php
+
+require_once '../config/config.php';
+
+
+$videourl=$_GET["videourl"];
+$videotitle=$_GET["videotitle"];
+$videoid=$_GET["videoid"];
+
+
+
+?>
+
+
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+ <HEAD>
+ <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-7">
+  <!--script src="http://code.jquery.com/jquery-1.7.1.min.js"></script-->
+  <script src="../build/jquery.js"></script>	
+  <!--script src="../build/mediaelement.js"></script-->
+  <script src="../build/mediaelement-and-player.min.js"></script>
+  <script src="testforfiles.js"></script>
+
+  <style type="text/css">
+  
+   
+   .style1{
+	font-size: 14px;
+	
+   }
+
+   .style2 {
+	font-size: 14px;
+   }
+
+  
+  
+
+
+ 
+  
+  </style>
+  
+                        
+  
+  <link rel="stylesheet" href="jquery-3.css" type="text/css" />
+  <link rel="stylesheet" href="../build/mediaelementplayer.min.css" />
+
+
+  
+	  <title><?php echo $videotitle; ?></title>
+
+                    
+                
+       
+	<meta charset="utf-8" />
+ </HEAD>
+
+ <script>
+  var gvideourl="<?php echo $videourl; ?>";
+  var gvideoid="<?php echo $videoid; ?>";
+  var gvideotitle="<?php echo $videotitle; ?>";
+
+ 
+
+ </script>
+
+ <div id="video" style="float:left; width:50%;">
+
+ 
+<h2>Video Title: <?php echo $videotitle; ?></h2><br>
+
+<!--video id="player1" width="600" height="420"-->
+<video id="player1" width="500" height="380">
+ <source src="<?php echo $videourl; ?>" type="video/youtube">	 
+    <!--source src="https://www.youtube.com/watch?v=KxJWF36SANU??vq=hd1080" type="video/youtube" -->
+	 <!--track kind="subtitles" src="../media/graphic_design.srt" srclang = "el" /-->
+	 
+
+</video>
+
+
+<br>
+<input type="button" id="button1" value="Preview" />
+<input type="button" id="button2" value="Store in DB" />
+<!--button id="button1" type="button">transfer</button-->
+<span id="time"></span>
+<br><br>
+
+<div class="container1">
+ <span id="label"></span>
+
+ <br><br>
+ <input type="button" id="button3" value="Return to choose other elements" />
+
+
+
+</div>
+
+
+
+<br><br>
+<br><span id="examplecomframe"></span>
+
+ </div>
+
+<div id="respond" style="float:right; width:50%;">
+
+
+      <h3>Set Quiz Questions and Answers here</h3>
+
+     <form name="commentform" >
+      
+     
+
+        <label for="FROM" class="required">TimePoint</label><br>
+        <input type="number" name="from" id="from" value="" tabindex="1" required="required"><br>
+         
+		<label for="TO" class="required">To</label><br>
+        <input type="number" name="to" id="to" value="" tabindex="2" required="required"><br><br>
+
+        Question <input type="text" size="80" name="Question"  id="Question"><br><br>
+        Answer 1 <input type="text" size="70" name="Answer1" id="Answer1"><br>
+        Answer 2 <input type="text" size="70" name="Answer2" id="Answer2"><br>
+        Answer 3 <input type="text" size="70" name="Answer3" id="Answer3"><br>
+        Answer 4 <input type="text" size="70" name="Answer4" id="Answer4"><br>
+        Answer 5 <input type="text" size="70" name="Answer5" id="Answer5"><br>
+
+		<input name="Submit"  type="button" value="Submit" onClick="JavaScript:handleSubmit()">
+        </form>
+      
+      
+    
+ <div>Questions  here: <span id="commentSection"></span></div>
+
+ </div>
+
+
+<script>
+
+var count=0;
+var timestamps = [];
+var all=0;
+var gComment="";
+
+var last = 0,
+now,
+old;
+
+
+var gme;
+var gi;
+
+
+
+
+$('#commentSection').html('.....<br>');
+
+function getComments()
+{
+
+var lAnswers=[];
+
+timestamps = [];
+var str1,str2;
+
+$('article').each(function(o){
+      if($(this).attr('data-start')){
+	     
+        var lAnswers=[];
+	    var lSubmitted=0;
+	    var lcommenttext=$(this).text();
+		//alert(lcommenttext);
+		var offset1=lcommenttext.indexOf("Question:");
+		var offset2=lcommenttext.indexOf("[Q1]");
+		var offset=offset1+9;
+		var end= offset2-offset-1;
+		var lQuestion = lcommenttext.substr(offset, end);
+		var lHasAnswers=0;
+
+		for (i=1; i<6; i++ )
+		{
+		  
+          str1="Answer"+i+":";
+		  str2="[A"+i+"]";
+
+		  offset1=lcommenttext.indexOf(str1);
+		  offset2=lcommenttext.indexOf("A"+i);
+		  if ( offset1!=-1)
+		  {
+		  offset=offset1+8;
+		  end = offset2-offset-1;
+          lAnswers[i]=lcommenttext.substr(offset, end);
+		  if (lAnswers[i]!="") {lHasAnswers=1;}
+		  }
+
+
+		}
+		
+		
+
+        timestamps.push({
+          start : +$(this).attr('data-start'),
+		   end : +$(this).attr('data-end'),
+		  Question: lQuestion,
+		  Submitted: lSubmitted,
+          Answers: lAnswers,
+		  HasAnswers: lHasAnswers
+		  
+        });
+      }
+    });
+
+
+all = timestamps.length;
+
+
+
+}
+
+
+function storeComments()
+{
+
+  
+	$.post("send_quiz_questions.php", {
+		timestamps:JSON.stringify(timestamps),
+		num:all,
+		videoid: gvideoid
+	}, function(data) {
+		//alert(data);
+	});
+	
+}
+
+function ReturntoSetElements()
+{
+
+var urlstr="chooselements.php?videoid="+gvideoid+"&videourl="+gvideourl+"&videotitle="+gvideotitle+"";
+	//alert (urlstr);
+window.location=urlstr;
+
+}
+
+
+
+
+function createComment(data) {
+  count=count+1;
+  
+  var comment = data.comment;
+  
+
+  var html = '' +
+  '<div><article id="' + count + '" data-start="'+data.from+'"'+' data-end="'+data.to+'"  class="hentry">' + 
+    '<div>from:'+data.from+' to: '+data.to+' ' +'<br>'+
+    '<br>Question:<span id="dataQuestion">'+data.Question+' [Q1] </span>';
+
+	if (data.Answer1!='')
+	{
+	html=html+'<br>Answer1: <span id="dataAnswer1">'+data.Answer1+' [A1] </span>'
+	}
+
+	if (data.Answer2!='')
+	{
+	html=html+'<br>Answer2: <span id="dataAnswer1">'+data.Answer2+' [A2] </span>'
+	}
+	if (data.Answer3!='')
+	{
+	html=html+'<br>Answer3: <span id="dataAnswer1">'+data.Answer3+' [A3] </span>'
+	}
+
+	if (data.Answer4!='')
+	{
+	html=html+'<br>Answer4: <span id="dataAnswer4">'+data.Answer4+' [A4] </span>'
+	}
+
+	if (data.Answer5!='')
+	{
+	html=html+'<br>Answer5: <span id="dataAnswer5">'+data.Answer5+' [A5] </span>'
+	}
+	 
+	
+  
+  html=html+'</article> <a href="#" class="remove_field">Remove</a></div><br>';
+
+  
+  return html;
+}
+
+
+
+function displayComment(data) {
+  var commentHtml = createComment(data);
+  
+// alert(commentHtml);
+$('#commentSection').append(commentHtml);
+$('#from').val('');
+$('#to').val('');
+$('#Question').val('');
+$('#Answer1').val('');
+$('#Answer2').val('');
+$('#Answer3').val('');
+$('#Answer4').val('');
+$('#Answer5').val('');
+
+
+
+}
+
+function handleSubmitquiz() {
+
+gme.play();
+timestamps[gi].Submitted=1;
+
+}
+
+
+function handleSubmit() {
+ 
+
+ //alert ('hello');
+ //alert ( $('#Answer2').val());
+  
+  var data = {
+    "from": $('#from').val(),
+    "to": $('#to').val(),
+	"Question": $('#Question').val(),
+	"Answer1": $('#Answer1').val(),
+	"Answer2": $('#Answer2').val(),
+	"Answer3": $('#Answer3').val(),
+	"Answer4": $('#Answer4').val(),
+	"Answer5": $('#Answer5').val()
+ };
+  
+  if (data.from=='' || data.to=='' || data.Question==''  )
+  {
+  alert('fill in the fields');
+  exit;
+  }
+ 
+
+ displayComment(data);
+ return false;
+ }
+
+  
+
+ 
+   document.getElementById('button1')['onclick'] = function() {getComments(); }
+   document.getElementById('button2')['onclick'] = function() {storeComments();}
+   document.getElementById('button3')['onclick'] = function() {ReturntoSetElements();}
+ 
+
+  
+
+
+/*$("button").click(function(){
+   post_comment();
+  });*/
+
+function showsection(t){
+var Answers=[];
+var lSubmitted;
+var comment='';
+var hasanswers=0;
+
+      for(i=0;i<all;i++){
+        if(t >= timestamps[i].start && t <= timestamps[i].end){
+			
+			 Question=timestamps[i].Question;
+			 //alert (Question);
+			 
+			 
+
+			hasanswers=0;
+
+			for (j=1; j<6; j++ )
+			 {Answers[j]=timestamps[i].Answers[j];}
+
+
+
+
+             var formstart=' <form name="form1">';
+
+			 var Question=Question+'<br>';
+
+			 var Answerstext='';
+
+			 for (j=0; j<6;  j++)
+			 {
+			 if (Answers[j]!=null)
+				 {
+				 hasanswers=1;
+				 Answerstext=Answerstext+'<input type="radio" name="'+j+'" value="'+j+'">'+Answers[j]+'<BR>';
+				 }
+			  }
+
+            if (hasanswers==0) 
+			{Answerstext=Answerstext+'<textarea id="txtArea" rows="5" cols="40"></textarea><br>';}
+
+		     var formend='<input name="SubmitQuiz"  type="button" value="Submit" onClick="JavaScript:handleSubmitquiz()"></form>';
+
+            
+			if (timestamps[i].Submitted==0)
+			{
+			
+			comment=formstart+Question+Answerstext+formend;
+			gme.pause();
+			gi=i;
+			
+
+			}
+			
+        
+			
+			 
+           } 
+
+		  }
+
+    if (comment!=gComment)
+    {
+	document.getElementById('label').innerHTML = comment;
+	
+	gComment=comment;
+	
+    }
+
+	
+      
+    };
+
+
+
+$('#commentSection').on("click",".remove_field", function(e){ //user click on remove text
+         e.preventDefault(); $(this).parent('div').remove(); x--;
+     })
+
+$('video').mediaelementplayer({
+	//framesPerSecond: 20,
+	features: ['playpause','progress','current','duration','tracks','volume'],
+		
+    // Hide controls when playing and mouse is not over the video
+    
+	
+	
+	success: function(me, node, player) {
+		
+
+		
+old=0;
+now=0;
+eventtype=0;
+
+
+gme=me;
+ 
+
+//time_cuepoints = parseInt(me.duration/interval);
+
+var events = ['loadstart', 'play','pause', 'ended','seeking','volumechange', 'muted'];
+
+me.addEventListener('timeupdate', function() {
+
+document.getElementById('time').innerHTML = 'Time : '+ me.currentTime;
+		now = parseInt(me.currentTime);
+		
+		//if(now > old){
+        if (now!=old)
+        {
+		showsection(now);
+        }
+        now=old;
+
+
+		
+
+
+	}, false);
+
+}});
+  
+ </script>
+
+
+
+ </BODY>
+</HTML>
+
+

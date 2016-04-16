@@ -1,0 +1,1 @@
+insert into video_quiz (videoid,start,end,question,questionType, answer1,answer2,answer3,answer4,answer5) values ('2','11','11','How dou you think adwords works?','2','','','','','')
